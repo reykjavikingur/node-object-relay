@@ -1,5 +1,7 @@
 const ObjectRelay = require('../');
 const should = require('should');
+const sinon = require('sinon');
+require('should-sinon');
 
 describe('ObjectRelay', () => {
 
@@ -22,11 +24,60 @@ describe('ObjectRelay', () => {
             };
         });
         describe('when beginning to transmit', () => {
-            beforeEach(()=>{
+            beforeEach(() => {
                 instance.transmitter.transmit(receiver);
             });
-            it('should receive value', ()=>{
+            it('should receive value', () => {
                 should(receivedValue).eql(value);
+            });
+        });
+    });
+
+    // TODO test delete
+
+    describe('instance with target having method', () => {
+        var targetSpy, target, instance;
+        beforeEach(() => {
+            targetSpy = sinon.spy();
+            target = {
+                make: function () {
+                    targetSpy();
+                }
+            };
+            instance = new ObjectRelay(target);
+        });
+        it('should not yet have called the spy', () => {
+            should(targetSpy).not.be.called();
+        });
+        describe('when calling method on proxy', () => {
+            beforeEach(() => {
+                instance.proxy.make();
+            });
+            it('should call spy', () => {
+                should(targetSpy).be.called();
+            });
+        });
+        describe('transmit', () => {
+            var receiverSpy, receiver;
+            beforeEach(() => {
+                receiverSpy = sinon.spy();
+                receiver = {
+                    make: function () {
+                        receiverSpy();
+                    }
+                };
+                instance.transmitter.transmit(receiver);
+            });
+            it('should not yet have called the spy', () => {
+                should(receiverSpy).not.be.called();
+            });
+            describe('when calling method on proxy', () => {
+                beforeEach(() => {
+                    instance.proxy.make();
+                });
+                xit('should call spy', () => {
+                    should(receiverSpy).be.called();
+                });
             });
         });
     });
