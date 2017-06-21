@@ -10,22 +10,33 @@ describe('Repeater', () => {
     });
 
     describe('instance with target having initial property value', () => {
-        var target, instance, value, receiver, receiverSpy;
+        var target, instance, value;
         beforeEach(() => {
-            receiverSpy = sinon.spy();
             value = 87;
             target = {
                 foo: value
             };
             instance = new ObjectRelay(target);
-            receiver = {
-                set foo(value) {
-                    receiverSpy(value);
-                }
-            };
+        });
+        describe('deleting property on proxy', () => {
+            beforeEach(() => {
+                // sanity test
+                should(target.hasOwnProperty('foo')).be.ok();
+                delete instance.proxy.foo;
+            });
+            it('should delete property on target', () => {
+                should(target.hasOwnProperty('foo')).not.be.ok();
+            });
         });
         describe('when beginning to transmit', () => {
+            var receiver, receiverSpy;
             beforeEach(() => {
+                receiverSpy = sinon.spy();
+                receiver = {
+                    set foo(value) {
+                        receiverSpy(value);
+                    }
+                };
                 instance.transmitter.transmit(receiver);
             });
             it('should call receiver spy', () => {
@@ -33,8 +44,6 @@ describe('Repeater', () => {
             });
         });
     });
-
-    // TODO test delete
 
     // TODO test when setter throws error
 
@@ -134,12 +143,13 @@ describe('Repeater', () => {
 
         describe('receiver for property', () => {
 
-            var receiver, receivedValue, transmission;
+            var receiver, receiveValue, transmission;
 
             beforeEach(() => {
+                receiveValue = sinon.spy();
                 receiver = {
                     set foo(value) {
-                        receivedValue = value;
+                        receiveValue(value);
                     }
                 };
                 transmission = instance.transmitter.transmit(receiver);
@@ -156,7 +166,7 @@ describe('Repeater', () => {
                     instance.proxy.foo = value;
                 });
                 it('should receive value', () => {
-                    should(receivedValue).eql(value);
+                    should(receiveValue).be.calledWith(value);
                 });
                 it('should set property in proxy', () => {
                     should(instance.proxy.foo).eql(value);
@@ -175,10 +185,21 @@ describe('Repeater', () => {
                             instance.proxy.foo = lateValue;
                         });
                         it('should not receive value', () => {
-                            should(receivedValue).eql(value);
+                            should(receiveValue).be.calledWith(value);
                         });
                     });
                 });
+
+                describe('when deleting property', () => {
+                    beforeEach(() => {
+                        receiveValue.reset();
+                        delete instance.proxy.foo;
+                    });
+                    it('should receive undefined', () => {
+                        should(receiveValue).be.calledWith(undefined);
+                    });
+                });
+
             });
 
         });
