@@ -67,7 +67,7 @@ describe('ObjectRelay', () => {
             });
         });
         describe('transmit', () => {
-            var receiverSpy, receiver;
+            var receiverSpy, receiver, transmission;
             beforeEach(() => {
                 receiverSpy = sinon.spy();
                 receiver = {
@@ -75,7 +75,7 @@ describe('ObjectRelay', () => {
                         receiverSpy();
                     }
                 };
-                instance.transmitter.transmit(receiver);
+                transmission = instance.transmitter.transmit(receiver);
             });
             it('should not yet have called the spy', () => {
                 should(receiverSpy).not.be.called();
@@ -86,6 +86,19 @@ describe('ObjectRelay', () => {
                 });
                 it('should call spy', () => {
                     should(receiverSpy).be.called();
+                });
+            });
+            describe('when closing transmission', () => {
+                beforeEach(() => {
+                    transmission.close();
+                });
+                describe('when calling method on proxy', () => {
+                    beforeEach(() => {
+                        instance.proxy.make();
+                    });
+                    it('should not call spy', () => {
+                        should(receiverSpy).not.be.called();
+                    });
                 });
             });
         });
