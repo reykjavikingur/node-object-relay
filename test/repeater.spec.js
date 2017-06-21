@@ -3,7 +3,7 @@ const should = require('should');
 const sinon = require('sinon');
 require('should-sinon');
 
-describe('ObjectRelay', () => {
+describe('Repeater', () => {
 
     it('should be defined', () => {
         should(ObjectRelay).be.ok();
@@ -40,17 +40,13 @@ describe('ObjectRelay', () => {
 
     // TODO test when method throws error
 
-    // TODO test when adding method to proxy and then calling it
-
-    // TODO test closing transmission and calling proxy method and confirming receiver method not called
-
     describe('instance with target having method', () => {
         var targetSpy, target, instance;
         beforeEach(() => {
             targetSpy = sinon.spy();
             target = {
                 make: function () {
-                    targetSpy();
+                    targetSpy.apply(this, arguments);
                 }
             };
             instance = new ObjectRelay(target);
@@ -65,6 +61,9 @@ describe('ObjectRelay', () => {
             it('should call spy', () => {
                 should(targetSpy).be.called();
             });
+            it('should call spy on correct context', () => {
+                should(targetSpy).be.calledOn(target);
+            });
         });
         describe('transmit', () => {
             var receiverSpy, receiver, transmission;
@@ -72,7 +71,7 @@ describe('ObjectRelay', () => {
                 receiverSpy = sinon.spy();
                 receiver = {
                     make: function () {
-                        receiverSpy();
+                        receiverSpy.apply(this, arguments);
                     }
                 };
                 transmission = instance.transmitter.transmit(receiver);
@@ -86,6 +85,9 @@ describe('ObjectRelay', () => {
                 });
                 it('should call spy', () => {
                     should(receiverSpy).be.called();
+                });
+                it('should call spy on receiver', () => {
+                    should(receiverSpy).be.calledOn(receiver);
                 });
             });
             describe('when closing transmission', () => {

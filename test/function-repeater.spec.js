@@ -56,6 +56,50 @@ describe('FunctionRepeater', () => {
         });
     });
 
+    describe('instance with target and context', () => {
+        var targetSpy, context, instance;
+        beforeEach(() => {
+            targetSpy = sinon.spy();
+            context = {
+                id: 101,
+                craft: function () {
+                    targetSpy.apply(this, arguments);
+                }
+            };
+            instance = new FunctionRepeater(context.craft, context);
+        });
+        describe('when calling proxy', () => {
+            beforeEach(() => {
+                instance.proxy();
+            });
+            it('should call spy with context', () => {
+                should(targetSpy).be.calledOn(context);
+            });
+        });
+    });
+
+    describe('instance with contextual target but no explicit context', () => {
+        var targetSpy, context, instance;
+        beforeEach(() => {
+            targetSpy = sinon.spy();
+            context = {
+                id: 101,
+                craft: function () {
+                    targetSpy.apply(this, arguments);
+                }
+            };
+            instance = new FunctionRepeater(context.craft);
+        });
+        describe('when calling proxy', () => {
+            beforeEach(() => {
+                instance.proxy();
+            });
+            it('should call spy with context', () => {
+                should(targetSpy).be.calledOn(instance);
+            });
+        });
+    });
+
     // TODO test that target is called before receivers
 
     // TODO test transmission.close()
@@ -63,10 +107,6 @@ describe('FunctionRepeater', () => {
     // TODO test when target throws error
 
     // TODO test when receiver throws error
-
-    // TODO test context of receiver call
-
-    // TODO test context of target call
 
     // TODO test target call return value
 
