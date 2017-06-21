@@ -10,8 +10,9 @@ describe('ObjectRelay', () => {
     });
 
     describe('instance with target having initial property value', () => {
-        var target, instance, value, receiver, receivedValue;
+        var target, instance, value, receiver, receiverSpy;
         beforeEach(() => {
+            receiverSpy = sinon.spy();
             value = 87;
             target = {
                 foo: value
@@ -19,7 +20,7 @@ describe('ObjectRelay', () => {
             instance = new ObjectRelay(target);
             receiver = {
                 set foo(value) {
-                    receivedValue = value;
+                    receiverSpy(value);
                 }
             };
         });
@@ -27,8 +28,8 @@ describe('ObjectRelay', () => {
             beforeEach(() => {
                 instance.transmitter.transmit(receiver);
             });
-            it('should receive value', () => {
-                should(receivedValue).eql(value);
+            it('should call receiver spy', () => {
+                should(receiverSpy).be.calledWith(value);
             });
         });
     });
@@ -38,6 +39,10 @@ describe('ObjectRelay', () => {
     // TODO test when setter throws error
 
     // TODO test when method throws error
+
+    // TODO test when adding method to proxy and then calling it
+
+    // TODO test closing transmission and calling proxy method and confirming receiver method not called
 
     describe('instance with target having method', () => {
         var targetSpy, target, instance;
@@ -79,7 +84,7 @@ describe('ObjectRelay', () => {
                 beforeEach(() => {
                     instance.proxy.make();
                 });
-                xit('should call spy', () => {
+                it('should call spy', () => {
                     should(receiverSpy).be.called();
                 });
             });
