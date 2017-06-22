@@ -43,7 +43,7 @@ describe('FunctionRepeater', () => {
             });
         });
 
-        describe('beginning to transmit', () => {
+        describe('transmitting', () => {
             var receiverSpy, receiver, transmission;
             beforeEach(() => {
                 receiverSpy = sinon.spy();
@@ -77,6 +77,33 @@ describe('FunctionRepeater', () => {
                     });
                 });
             });
+        });
+
+        describe('transmitting to receiver with catch', () => {
+            var receiverError, receiver, catcherSpy, catcher, transmission;
+            beforeEach(() => {
+                receiverError = new Error('fake error');
+                receiver = function () {
+                    throw receiverError;
+                };
+                catcherSpy = sinon.spy();
+                catcher = function () {
+                    catcherSpy.apply(this, arguments);
+                };
+                transmission = instance.transmitter.transmit(receiver).catch(catcher);
+            });
+            it('should return transmission', () => {
+                should(transmission).be.ok();
+            });
+            describe('when calling proxy', () => {
+                beforeEach(() => {
+                    instance.proxy();
+                });
+                it('should call catcher', () => {
+                    should(catcherSpy).be.calledWith(receiverError);
+                });
+            });
+
         });
 
         describe('transmitting to multiple receivers that both throw errors', () => {
