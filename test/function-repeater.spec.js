@@ -34,13 +34,13 @@ describe('FunctionRepeater', () => {
         });
 
         describe('beginning to transmit', () => {
-            var receiverSpy, receiver;
+            var receiverSpy, receiver, transmission;
             beforeEach(() => {
                 receiverSpy = sinon.spy();
                 receiver = function () {
                     receiverSpy();
                 };
-                instance.transmitter.transmit(receiver);
+                transmission = instance.transmitter.transmit(receiver);
             });
             it('should not yet call spy', () => {
                 should(receiverSpy).not.be.called();
@@ -51,6 +51,20 @@ describe('FunctionRepeater', () => {
                 });
                 it('should call spy', () => {
                     should(receiverSpy).be.called();
+                });
+            });
+            describe('when transmission is closed', () => {
+                beforeEach(() => {
+                    transmission.close();
+                });
+                describe('when proxy is called', () => {
+                    beforeEach(() => {
+                        receiverSpy.reset();
+                        instance.proxy();
+                    });
+                    it('should not call spy', () => {
+                        should(receiverSpy).not.be.called();
+                    });
                 });
             });
         });
@@ -101,8 +115,6 @@ describe('FunctionRepeater', () => {
     });
 
     // TODO test that target is called before receivers
-
-    // TODO test transmission.close()
 
     // TODO test when target throws error
 
