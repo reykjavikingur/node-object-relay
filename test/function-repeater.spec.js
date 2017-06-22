@@ -14,7 +14,7 @@ describe('FunctionRepeater', () => {
         beforeEach(() => {
             targetSpy = sinon.spy();
             target = function () {
-                targetSpy();
+                targetSpy.apply(this, arguments);
             };
             instance = new FunctionRepeater(target);
         });
@@ -30,6 +30,16 @@ describe('FunctionRepeater', () => {
             });
             it('should call spy', () => {
                 should(targetSpy).be.called();
+            });
+        });
+        describe('when proxy is called with arguments', () => {
+            var args;
+            beforeEach(() => {
+                args = [48, 98];
+                instance.proxy(args[0], args[1]);
+            });
+            it('should call spy with arguments', () => {
+                should(targetSpy).be.calledWith(args[0], args[1]);
             });
         });
 
@@ -136,7 +146,5 @@ describe('FunctionRepeater', () => {
     // TODO test when target throws error
 
     // TODO test when receiver throws error
-
-    // TODO test target call arguments
 
 });
