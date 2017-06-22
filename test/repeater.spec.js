@@ -43,11 +43,99 @@ describe('Repeater', () => {
                 should(receiverSpy).be.calledWith(value);
             });
         });
+        describe('transmitting to receiver with conditionally faulty setter', () => {
+            var invalidValue, receiverError, receiverSpy, receiver, transmission;
+            beforeEach(() => {
+                invalidValue = 10;
+                receiverError = new Error('fake setter error');
+                receiverSpy = sinon.spy();
+                receiver = {
+                    set foo(value) {
+                        receiverSpy.apply(this, arguments);
+                        if (value === invalidValue) {
+                            throw receiverError;
+                        }
+                    }
+                };
+                transmission = instance.transmitter.transmit(receiver);
+            });
+            it('should call receiver setter', () => {
+                should(receiverSpy).be.calledWith(value);
+            });
+            describe('when setting property on proxy', () => {
+                var nextValue;
+                beforeEach(() => {
+                    nextValue = invalidValue;
+                    receiverSpy.reset();
+                    instance.proxy.foo = nextValue;
+                });
+                it('should call receiver setter', () => {
+                    should(receiverSpy).be.calledWith(nextValue);
+                });
+            });
+        });
+        describe('transmitting to receiver with conditionally faulty setter and catching', () => {
+            var invalidValue, receiverError, receiverSpy, catcherSpy, catcher, receiver, transmission;
+            beforeEach(() => {
+                invalidValue = 10;
+                should(invalidValue).not.eql(value);
+                receiverError = new Error('fake setter error');
+                receiverSpy = sinon.spy();
+                receiver = {
+                    set foo(value) {
+                        receiverSpy.apply(this, arguments);
+                        if (value === invalidValue) {
+                            throw receiverError;
+                        }
+                    }
+                };
+                catcherSpy = sinon.spy();
+                catcher = function () {
+                    catcherSpy.apply(this, arguments);
+                };
+                transmission = instance.transmitter.transmit(receiver).catch(catcher);
+            });
+            it('should call receiver setter', () => {
+                should(receiverSpy).be.calledWith(value);
+            });
+            describe('when setting property on proxy', () => {
+                beforeEach(() => {
+                    catcherSpy.reset();
+                    receiverSpy.reset();
+                    instance.proxy.foo = invalidValue;
+                });
+                it('should call catcher', () => {
+                    should(catcherSpy).be.called();
+                });
+            });
+        });
+        describe('transmitting to receiver with totally faulty setter and catching', () => {
+            var receiverError, receiverSpy, catcherSpy, catcher, receiver, transmission;
+            beforeEach(() => {
+                receiverError = new Error('fake setter error');
+                receiverSpy = sinon.spy();
+                receiver = {
+                    set foo(value) {
+                        receiverSpy.apply(this, arguments);
+                        throw receiverError;
+                    }
+                };
+                catcherSpy = sinon.spy();
+                catcher = function () {
+                    catcherSpy.apply(this, arguments);
+                };
+
+            });
+            it('should call receiver setter', () => {
+                let f = function () {
+                    instance.transmitter.transmit(receiver).catch(catcher);
+                };
+                should(f).throw();
+            });
+
+        });
+
     });
-
-    // TODO test when setter throws error
-
-    // TODO test when method throws error
 
     describe('instance with target having method', () => {
         var targetSpy, target, instance;
@@ -74,7 +162,7 @@ describe('Repeater', () => {
                 should(targetSpy).be.calledOn(target);
             });
         });
-        describe('transmit', () => {
+        describe('transmitting', () => {
             var receiverSpy, receiver, transmission;
             beforeEach(() => {
                 receiverSpy = sinon.spy();
@@ -113,6 +201,55 @@ describe('Repeater', () => {
                 });
             });
         });
+        describe('transmitting to receiver with method that throws error', () => {
+            var receiverSpy, receiverError, receiver, transmission;
+            beforeEach(() => {
+                receiverError = new Error('fake error');
+                receiverSpy = sinon.spy();
+                receiver = {
+                    make: function () {
+                        receiverSpy.apply(this, arguments);
+                        throw receiverError;
+                    }
+                };
+                transmission = instance.transmitter.transmit(receiver);
+            });
+            describe('when calling method on proxy', () => {
+                beforeEach(() => {
+                    instance.proxy.make();
+                });
+                it('should call receiver', () => {
+                    should(receiverSpy).be.called();
+                });
+            });
+        });
+        describe('transmitting to receiver with faulty method and catching', () => {
+            var receiverSpy, receiverError, catcherSpy, catcher, receiver, transmission;
+            beforeEach(() => {
+                receiverError = new Error('fake error');
+                receiverSpy = sinon.spy();
+                catcherSpy = sinon.spy();
+                receiver = {
+                    make: function () {
+                        receiverSpy.apply(this, arguments);
+                        throw receiverError;
+                    }
+                };
+                catcher = function () {
+                    catcherSpy.apply(this, arguments);
+                };
+                transmission = instance.transmitter.transmit(receiver).catch(catcher);
+            });
+            describe('when calling method on proxy', () => {
+                beforeEach(() => {
+                    instance.proxy.make();
+                });
+                it('should call catcher', () => {
+                    should(catcherSpy).be.calledWith(receiverError);
+                });
+            });
+        });
+
     });
 
     describe('instance with empty object as target', () => {
