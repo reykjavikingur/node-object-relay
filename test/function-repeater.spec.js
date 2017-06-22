@@ -114,13 +114,28 @@ describe('FunctionRepeater', () => {
         });
     });
 
+    describe('instance with target that returns value', () => {
+        var rv, target, instance;
+        beforeEach(() => {
+            rv = 150;
+            target = function () {
+                return rv;
+            };
+            instance = new FunctionRepeater(target);
+        });
+        describe('proxy', () => {
+            it('should return same value as target', () => {
+                let proxy = instance.proxy;
+                should(proxy()).eql(target());
+            });
+        });
+    });
+
     // TODO test that target is called before receivers
 
     // TODO test when target throws error
 
     // TODO test when receiver throws error
-
-    // TODO test target call return value
 
     // TODO test target call arguments
 
