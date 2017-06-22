@@ -78,6 +78,39 @@ describe('FunctionRepeater', () => {
                 });
             });
         });
+
+        describe('transmitting to multiple receivers that both throw errors', () => {
+            var receiverSpy1, receiverSpy2, receiver1, receiver2;
+            beforeEach(() => {
+                receiverSpy1 = sinon.spy();
+                receiverSpy2 = sinon.spy();
+                receiver1 = function () {
+                    receiverSpy1.apply(this, arguments);
+                    throw new Error('fake error 1');
+                };
+                receiver2 = function () {
+                    receiverSpy2.apply(this, arguments);
+                    throw new Error('fake error 2');
+                };
+                instance.transmitter.transmit(receiver1);
+                instance.transmitter.transmit(receiver2);
+            });
+            describe('when calling proxy', () => {
+                beforeEach(() => {
+                    targetSpy.reset();
+                    instance.proxy();
+                });
+                it('should call target', () => {
+                    should(targetSpy).be.called();
+                });
+                it('should call receiver1', () => {
+                    should(receiverSpy1).be.called();
+                });
+                it('should call receiver2', () => {
+                    should(receiverSpy2).be.called();
+                });
+            });
+        });
     });
 
     describe('instance with target and context', () => {
@@ -141,10 +174,21 @@ describe('FunctionRepeater', () => {
         });
     });
 
-    // TODO test that target is called before receivers
-
-    // TODO test when target throws error
-
-    // TODO test when receiver throws error
+    describe('instance with target that throws error', () => {
+        var target, instance;
+        beforeEach(() => {
+            target = function () {
+                throw new Error('fake error');
+            };
+            instance = new FunctionRepeater(target);
+        });
+        describe('proxy', () => {
+            it('should throw error', () => {
+                let proxy = instance.proxy;
+                let f = () => proxy();
+                should(f).throw();
+            });
+        });
+    });
 
 });
