@@ -151,6 +151,14 @@ describe('Repeater', () => {
         it('should not yet have called the spy', () => {
             should(targetSpy).not.be.called();
         });
+        it('should throw error when trying to overwrite method on proxy', () => {
+            let f = function () {
+                instance.proxy.make = function () {
+                    console.log('do something else');
+                };
+            };
+            should(f).throw();
+        });
         describe('when calling method on proxy', () => {
             beforeEach(() => {
                 instance.proxy.make();
