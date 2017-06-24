@@ -1,6 +1,6 @@
 {
   "name": "object-relay",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Utility to relay changes transmitted from proxy including property setter calls and method invocations",
   "main": "index.js",
   "scripts": {
